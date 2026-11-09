@@ -1,8 +1,13 @@
 import os
+import sys
 import io
 import re
+import time
 import base64
 import hashlib
+import threading
+import webbrowser
+import multiprocessing
 import cv2
 import numpy as np
 from PIL import Image, ImageOps, ExifTags
@@ -13,18 +18,47 @@ from insightface.app import FaceAnalysis
 
 app = FastAPI(title="Ashraf Finance Identity Verification")
 
-STATIC_INDEX = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "index.html")
+def get_static_index_path():
+    candidates = []
+    if getattr(sys, "frozen", False):
+        if hasattr(sys, "_MEIPASS"):
+            candidates.append(os.path.join(sys._MEIPASS, "static", "index.html"))
+        exe_dir = os.path.dirname(sys.executable)
+        candidates.append(os.path.join(exe_dir, "static", "index.html"))
+    candidates.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "index.html"))
+    for c in candidates:
+        if os.path.isfile(c):
+            return c
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "index.html")
+
+def get_models_root():
+    candidates = []
+    if getattr(sys, "frozen", False):
+        exe_dir = os.path.dirname(sys.executable)
+        candidates.append(exe_dir)
+        if hasattr(sys, "_MEIPASS"):
+            candidates.append(sys._MEIPASS)
+    src_dir = os.path.dirname(os.path.abspath(__file__))
+    candidates.append(src_dir)
+    home_root = os.path.expanduser("~/.insightface")
+    candidates.append(home_root)
+
+    for c in candidates:
+        if os.path.isdir(os.path.join(c, "models", "buffalo_l")):
+            return c
+    return "~/.insightface"
 
 fa_small = None
 fa_large = None
 
 def get_detectors():
     global fa_small, fa_large
+    root_dir = get_models_root()
     if fa_small is None:
-        fa_small = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
+        fa_small = FaceAnalysis(name="buffalo_l", root=root_dir, providers=["CPUExecutionProvider"])
         fa_small.prepare(ctx_id=0, det_size=(640, 640))
     if fa_large is None:
-        fa_large = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
+        fa_large = FaceAnalysis(name="buffalo_l", root=root_dir, providers=["CPUExecutionProvider"])
         fa_large.prepare(ctx_id=0, det_size=(1600, 1600))
     return fa_small, fa_large
 
@@ -266,7 +300,8 @@ SAMPLE_PATHS = {
 
 @app.get("/", response_class=HTMLResponse)
 async def index():
-    with open(STATIC_INDEX, encoding="utf-8") as fh:
+    index_path = get_static_index_path()
+    with open(index_path, encoding="utf-8") as fh:
         return fh.read()
 
 @app.get("/api/health")
@@ -472,7 +507,35 @@ async def verify(
         }
 
 if __name__ == "__main__":
-    print("Pre-loading InsightFace detectors...")
+    multiprocessing.freeze_support()
+
+    for stream in (sys.stdout, sys.stderr):
+        if stream and hasattr(stream, "reconfigure"):
+            try:
+                stream.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
+
+    print("=" * 62)
+    print("      Ashraf Finance -- Automated Biometric ID Verifier")
+    print("      InsightFace ArcFace + Comprehensive Forensic Engine")
+    print("=" * 62)
+
+    print("\n[+] Loading facial biometric models...")
     get_detectors()
-    print("Ashraf Finance Identity Verification Server running at http://127.0.0.1:8000")
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    print("[OK] Biometric models initialized successfully.")
+
+    def auto_open_browser():
+        time.sleep(1.2)
+        try:
+            webbrowser.open("http://127.0.0.1:8000")
+        except Exception:
+            pass
+
+    threading.Thread(target=auto_open_browser, daemon=True).start()
+
+    print("[+] KYC Verifier server active at: http://127.0.0.1:8000")
+    print("[+] Web interface opened in your default browser.")
+    print("\n[i] Press Ctrl+C or close this console window to exit.\n")
+
+    uvicorn.run(app, host="127.0.0.1", port=8000, log_level="info")

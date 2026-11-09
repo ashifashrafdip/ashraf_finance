@@ -14,6 +14,10 @@ ENV/
 # Large media captures and test scratch files
 captures/
 scratch/
+models/
+build/
+dist/
+*.exe
 *.webm
 *.mp4
 
