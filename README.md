@@ -1,12 +1,19 @@
 # Ashraf Finance — Biometric ID Verification & Image Forensics
 
-An automated identity verification and digital image forensics platform built with **InsightFace (ArcFace)**, **OpenCV**, and **FastAPI**.
+An automated identity verification and digital image forensics platform built with **InsightFace (ArcFace)**, **OpenCV**, and **PySide6 (Qt 6 Desktop GUI)**.
 
 It automatically compares identity cards and selfie photos to determine biometric identity matching, detects image manipulation (Photoshop, Generative AI, face-swapping), and extracts over 75+ camera, optical, GPS, and EXIF metadata parameters.
 
 ---
 
 ## ✨ Features
+
+- **Native Python Desktop GUI (PySide6 / Qt 6):**
+  - Standalone desktop application window with zero browser or localhost dependencies.
+  - Senior-designer grade Fintech / Stripe-inspired visual styling.
+  - Unified drag & drop zone directly on the window.
+  - Live thumbnail previews before verification.
+  - Multi-threaded asynchronous processing so the UI never lags or freezes.
 
 - **Biometric Face Verification (ArcFace):**
   - High-precision facial representation matching using deep embedding vectors (ArcFace `buffalo_l`).
@@ -29,21 +36,20 @@ It automatically compares identity cards and selfie photos to determine biometri
   - Technical: Dimensions, Color Space (sRGB / Display P3), DPI, Orientation, Format.
   - Live metadata search box to instantly filter any field or value.
 
-- **Clean Fintech UI:**
-  - Stripe/Fintech-grade visual design.
-  - Unified drag & drop zone for 1 or 2 images.
-  - Live thumbnail previews before verification.
-  - Fast response times running completely on local hardware.
-
 ---
 
 ## 🚀 Quick Start
 
-### 1. Prerequisites
-- Python 3.10+
-- (Optional) NVIDIA GPU with CUDA for ultra-fast ONNX inference
+### 1. Run the Native Desktop App
+Double-click **`KYC_Verifier.exe`** directly from the project folder!
 
-### 2. Installation
+Or launch from Python:
+```bash
+python gui_verifier.py
+```
+Or double-click **`Run_KYC_GUI.bat`**.
+
+### 2. Installation (from source)
 Clone the repository:
 ```bash
 git clone https://github.com/ashifashrafdip/ashraf_finance.git
@@ -53,54 +59,6 @@ cd ashraf_finance
 Install dependencies:
 ```bash
 python -m pip install -r requirements.txt
-```
-
-### 3. Run the Server
-On Windows, you can double-click **`Run_KYC_Verifier.bat`** or execute:
-```bash
-python kyc_verifier.py
-```
-
-Open your browser and navigate to:
-```
-http://127.0.0.1:8000
-```
-
----
-
-## 🛠️ API Reference
-
-### `POST /api/verify`
-Accepts `multipart/form-data`:
-- `mode`: `"single"` or `"dual"`
-- `image1`: Source image file (Selfie holding ID, or Selfie photo)
-- `image2`: (Optional in dual mode) ID card image file
-
-**Response JSON:**
-```json
-{
-  "mode": "single",
-  "similarity_pct": "80.6%",
-  "similarity_label": "Strong similarity",
-  "is_match": true,
-  "card_id": { ... },
-  "card_selfie": { ... },
-  "table": {
-    "col_id_title": "ID CARD",
-    "col_selfie_title": "SELFIE HOLDING ID",
-    "rows": [ ... ]
-  }
-}
-```
-
-### `GET /api/health`
-Returns system status and active biometric model:
-```json
-{
-  "status": "ok",
-  "brand": "Ashraf Finance",
-  "model": "ArcFace buffalo_l"
-}
 ```
 
 ---
